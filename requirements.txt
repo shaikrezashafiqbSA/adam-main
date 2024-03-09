@@ -1,5 +1,9 @@
 numpy
 pandas
 python-dotenv
+openpyxl
 google-generativeai 
 pinecone-client
+
+jupyter-ipywidgets
+tqdm

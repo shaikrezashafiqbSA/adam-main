@@ -44,12 +44,7 @@ class GHandler:
             BLOCK_LOW_AND_ABOVE = Block when low, medium or high probability of unsafe content
         """
         self.API_KEY = API_KEY
-        self.generation_config = {
-                                "temperature": 0.9,
-                                "top_p": 0.95,
-                                "top_k": 40,
-                                "max_output_tokens": 1024,
-                                }
+        self.generation_config = generation_config
         self.safety_settings = [
             {
             "category": "HARM_CATEGORY_HARASSMENT",
@@ -150,7 +145,7 @@ class GHandler:
         print(response.text)
         return response
     
-    def _embed_fn(self,
+    def embed_text(self,
                   title,
                   text,
                   model='models/embedding-001', ):
@@ -173,7 +168,7 @@ class GHandler:
         assert text in df.columns, f"text: '{text}' column not found in dataframe"
         
 
-        df['Embeddings'] = df.apply(lambda row: self._embed_fn(row[title], row[text], model=model), axis=1)
+        df['Embeddings'] = df.apply(lambda row: self.embed_text(str(row[title]), str(row[text]), model=model), axis=1)
 
         return df
 
@@ -187,50 +182,21 @@ class GHandler:
                                     task_type="retrieval_query")
         
     def find_best_passage(self,
-                          query, 
+                          content, 
                           dataframe, 
+                          topN = 1,
                           task_type="retrieval_query",
-                          model='models/embedding-001'):
+                          model='models/embedding-001') -> pd.Series:
         """
         Compute the distances between the query and each document in the dataframe
         using the dot product.
         """
         query_embedding = genai.embed_content(model=model,
-                                                content=query,
+                                                content=content,
                                                 task_type=task_type)
         dot_products = np.dot(np.stack(dataframe['Embeddings']), query_embedding["embedding"])
-        idx = np.argmax(dot_products)
-        return dataframe.iloc[idx]['Text'] # Return text from index with max value
+        idx = np.argsort(dot_products)[-topN:][::-1]
+        return dataframe.iloc[idx]['Text'] # Return text from indices with top N values
     
-    def build_knowledgebase(self,
-                            data,
-                            knowledge_domain = "travel", 
-                            data_type = "csv"):
-        """
-        This is a higher level function that when called,
-        will allow the user to input any kind of unstructured or structured data 
-        (images, pdf, excel sheets, word documents, etc)
-
-        The function will automatically process the data and store it in a structured format
-        for further embedding and retrieval queries. 
-
-        The knowledge_domain will specify the kind of data that the user is inputting.
-        So if the user is inputting travel data, the knowledge_domain will be "travel"
-        if the user is inputting islamic data, the knowledge_domain will be "islam"
-
-        This way the user can input any kind of data and the function will automatically process it
-        and store it in a structured format for further retrieval queries.
-        """
-        
-        if data_type != "csv":
-            raise ValueError("Data type not supported. Please input a csv file")
-        else:
-            df = pd.read_csv(data)
-            df = self.clean_df(df)
-            df = self.embed_df(df)
-            return df
-
-    def clean_process_df(self, df):
-        df.apply(lambda row: ', '.join([f"{col}: {row[col]}" for col in df.columns]), axis=1)
 
     
