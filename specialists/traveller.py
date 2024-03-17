@@ -463,15 +463,21 @@ class Traveller:
                         you would segment it into and return:
                         'client: Shaik
                         client_request: The client Shaik needs to go Singapore with VIP driver for 5 days, with a focus on arab/malay street
-                        flights: Singapore
-                        accomodations: Singapore near arab/malay street
-                        activities: segmented_query:arab/malay street tour
-                        services: segmented_query:VIP driver for 5 days'
+                        flights: Singapore airport
+                        accomodations: near arab/malay street, Singapore
+                        activities: arab/malay street tour
+                        services: VIP driver for 5 days'
+                        ALL segments must be returned.
+                        If any of the segments are not present, then please indicate that the segment is not present and provide fillers. 
                         """
             segments = self.model_specialist.prompt(model_name = model_name, prompt = prompt)
             # extract the segments
-            client,client_request,flights,accomodations,activities,services = segments.text.split("\n")
-
+            try:
+                client,client_request,flights,accomodations,activities,services = segments.text.split("\n")
+            except Exception as e:
+                print(segments.text)
+                raise ValueError(f"segments not extracted: {e}")
+            
             # Now we can use the segments to generate the travel package
             # Get historical client data
             client_recommendation = self.I_recommend_client(client, topN = topN, task_type = task_type)
@@ -530,8 +536,15 @@ class Traveller:
                         This trip_recommendation comes with the following services RECOMMENDATIONs:
                         {services}
                         """
+            
+            recommendations = {"client_recommendation":client_recommendation,
+                                "client_request_recommendation":client_request_recommendation,
+                                "flights":flights,
+                                "accomodations":accomodations,
+                                "activities":activities,
+                                "services":services}
             response_UX = self.model_specialist.prompt(UX_prompt, model_name = model_name)    
             pprint(response_UX.text)                   
-            return {"prompt": UX_prompt, "response": response_UX}
+            return {"prompt": UX_prompt, "response": response_UX, "recommendations": recommendations}
                          
 

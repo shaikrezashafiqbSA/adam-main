@@ -7,5 +7,6 @@ anthropic
 pinecone-client
 openpyxl
 
+tiktoken
 jupyter-ipywidgets
 tqdm
