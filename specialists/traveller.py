@@ -39,11 +39,19 @@ class Traveller:
                         reembed = False,
                         embed_id = 0,
                         data_model_keys = {"TEST - CLIENT":"CLIENT ID",
-                                                  "TEST - CLIENT REQUEST":"CLIENT ID",
-                                                  "TEST - FLIGHTS":"FLIGHT ID",
-                                                  "TEST - ACCOMODATIONS":"HOTEL ID",
-                                                  "TEST - SERVICES":"SERVICE ID",
-                                                  }
+                                            "TEST - CLIENT REQUEST":"CLIENT ID",
+                                            "TEST - FLIGHTS":"FLIGHT ID",
+                                            "TEST - ACCOMODATIONS":"ACCOMODATION ID",
+                                            "TEST - ACTIVITIES":"ACTIVITY ID",
+                                            "TEST - SERVICES":"SERVICE ID",
+                                            },
+                        reembed_table = {"TEST - CLIENT":False,
+                                        "TEST - CLIENT REQUEST":False,
+                                        "TEST - FLIGHTS":True,
+                                        "TEST - ACCOMODATIONS":False,
+                                        "TEST - ACTIVITIES":False,
+                                        "TEST - SERVICES":False,
+                                        }
                         ):
         
         print("loading specialist: TRAVELLER ...")
@@ -52,7 +60,7 @@ class Traveller:
             self.tables = self.prep_data_model(data_model_keys=data_model_keys)
             # print(self.tables)
             # embed the data model
-            self.tables = self.embed_data_model(self.tables,reembed=reembed,embed_id = embed_id, embedding_model = self.embedding_model)
+            self.tables = self.embed_data_model(self.tables,reembed_table=reembed_table,embed_id = embed_id, embedding_model = self.embedding_model)
         else: 
             try:
                 self.tables = pickle_helper.pickle_this(data=None, pickle_name=f"TRAVELLER_STATE_{embed_id}", path=self.state_path)
@@ -74,11 +82,12 @@ class Traveller:
     
     def prep_data_model(self,         
                         data_model_keys = {"TEST - CLIENT":"CLIENT ID",
-                                                  "TEST - CLIENT REQUEST":"CLIENT ID",
-                                                  "TEST - FLIGHTS":"FLIGHT ID",
-                                                  "TEST - ACCOMODATIONS":"ACCOMODATION ID",
-                                                  "TEST - SERVICES":"SERVICE ID",
-                                                  },
+                                            "TEST - CLIENT REQUEST":"CLIENT ID",
+                                            "TEST - FLIGHTS":"FLIGHT ID",
+                                            "TEST - ACCOMODATIONS":"ACCOMODATION ID",
+                                            "TEST - ACTIVITIES":"ACTIVITY ID",
+                                            "TEST - SERVICES":"SERVICE ID",
+                                            },
                         verbose = True,
                         ):
         """
@@ -106,13 +115,18 @@ class Traveller:
         for tab in self.tables:
             df = self.tables[tab]
             # Chunk all the columns into a single text column
-            df["Text"] = df.apply(lambda row: ", ".join([f"{col}: {row[col]}" for col in df.columns]), axis=1)
+            if "FLIGHTS" in tab:
+                # Only combine columns "Origin" and "Destination"
+                df["Text"] = df.apply(lambda row: ", ".join([f"{col}: {row[col]}" for col in df.columns if col in ["FLIGHT ID", "Origin", "Destination", "Price"]]), axis=1)
+                # df["Text"] = df.apply(lambda row: ", ".join([f"{col}: {row[col]}" for col in df.columns]), axis=1)
+            else:
+                df["Text"] = df.apply(lambda row: ", ".join([f"{col}: {row[col]}" for col in df.columns]), axis=1)
             # set the title
             df["Title"] = df[data_model_keys[tab]]
             # ensure Title has no NaNs or None
             df["Title"] = df["Title"].dropna()
             # drop everything except for the title and text
-            df = df[["Title", "Text"]] # would this reduce ram? or should i just keep the original df? ans: yes it would reduce ram but not by much but it would make the data model more efficient
+            # df = df[["Title", "Text"]] # would this reduce ram? or should i just keep the original df? ans: yes it would reduce ram but not by much but it would make the data model more efficient
             # print col names and number of rows
             if verbose:
                 print(f"tab: {tab} - {df.columns} - {len(df)}")
@@ -125,24 +139,44 @@ class Traveller:
     # EMBEDDINGS
     # =====================================================================
 
-    def embed_data_model(self, tables, reembed=False, embedding_model = None, embed_id = 0):
+    def embed_data_model(self, 
+                         tables,                                     
+                         reembed_table = {"TEST - CLIENT":False,
+                                          "TEST - CLIENT REQUEST":False,
+                                          "TEST - FLIGHTS":True,
+                                          "TEST - ACCOMODATIONS":False,
+                                          "TEST - ACTIVITIES":False,
+                                          "TEST - SERVICES":False,
+                                          }, 
+                         embedding_model = None, 
+                         embed_id = 0
+                         ):
         if embedding_model is None:
             embedding_model = self.embedding_model
 
         for embed_step_id,tab in enumerate(tables.keys()):
-            print(f"TRAVELLER embedding: {tab}")
-            if reembed: 
+            # print(f"TRAVELLER embedding: {tab}")
+            if reembed_table[tab]: 
                 try:
-                    tables[tab] = self.model_specialist.embed_df(tables[tab],
+                    embed_df = self.model_specialist.embed_df(tables[tab],
                                                                 title = "Title", 
                                                                 text = "Text",
                                                                 model=embedding_model)
+                    tables[tab] = embed_df
                 except Exception as e:
                     raise ValueError(f"Embed_df FAILED: \n{e}\n - Please investigate and debug the error")
+                
+                pickle_helper.pickle_this(data=embed_df, pickle_name = f"embedded_{tab}", path=self.state_path)
+                print(f"TRAVELLER embedding: {tab} ({embed_id}{embed_step_id}) - EMBEDDED SAVED")
+
             else:
-                tables[tab] = pickle_helper.pickle_this(f"TRAVELLER_STATE_{embed_id}{embed_step_id}", path=self.state_path)
+                tables[tab] = pickle_helper.pickle_this(data=None, pickle_name = f"TRAVELLER_STATE_{embed_id}{embed_step_id}", path=self.state_path)
+                print(f"TRAVELLER embedding: {tab} ({embed_id}{embed_step_id}) - LOADED")
+
+
             if embed_step_id == len(tables) - 1:
                 embed_step_id=""
+            
             pickle_helper.pickle_this(data=tables, pickle_name=f"TRAVELLER_STATE_{embed_id}{embed_step_id}", path=self.state_path)
             print(f"TRAVELLER embedding: {tab} ({embed_id}{embed_step_id}) - SAVED")
         print(f"TRAVELLER_STATE_{embed_id}{embed_step_id} - SAVED in {self.state_path}")
@@ -170,6 +204,8 @@ class Traveller:
             topN_results = '\n'.join(topN_results)
         elif isinstance(topN_results, str):
             topN_results = topN_results
+        elif isinstance(topN_results, pd.DataFrame):
+            topN_results = topN_results.to_dict(orient='records')
         return topN_results
 
     
@@ -183,18 +219,13 @@ class Traveller:
     # ---------------------------------------------------------------------
 
     def I_recommend_flights(self, 
-                          travel_proposal,
-                          topN = 3, 
-                          task_type = "retrieval_query"):
+                            content,
+                            topN = 3, 
+                            task_type = "retrieval_query"):
         """
         This function will recommend the topN most relevant flights given the client request
         """
         context_data = "TEST - FLIGHTS"
-
-        content = f"""
-        I have an inventory for a {travel_proposal}. 
-        I can recommend you the longest flight based on the location of the activity.
-        """
 
         return self.search_context_data(context_data = context_data, 
                                         content = content,
@@ -202,18 +233,27 @@ class Traveller:
                                         task_type = task_type)
     
     def I_recommend_accomodations(self,
-                                travel_proposal,
-                                topN = 3, 
-                                task_type = "retrieval_query"):
+                                    content,
+                                    topN = 3, 
+                                    task_type = "retrieval_query"):
         """
         This function will recommend the topN most relevant accomodations given the client request
         """
         context_data = "TEST - ACCOMODATIONS"
 
-        content = f"""
-        I have an inventory for a {travel_proposal}. 
-        I can recommend you a set of optimal accomodation based on the location of the activity.
+        return self.search_context_data(context_data = context_data, 
+                                        content = content,
+                                        topN = topN,
+                                        task_type = task_type)
+    def I_recommend_activities(self,
+                                content,
+                                topN = 3, 
+                                task_type = "retrieval_query"):
         """
+        This function will recommend the topN most relevant services given the client request
+        """
+
+        context_data = "TEST - ACTIVITIES"
 
         return self.search_context_data(context_data = context_data, 
                                         content = content,
@@ -221,16 +261,14 @@ class Traveller:
                                         task_type = task_type)
     
     def I_recommend_services(self,
-                           travel_proposal,
-                           topN = 3, 
-                           task_type = "retrieval_query"):
+                             content,
+                             topN = 3,
+                             task_type = "retrieval_query"):
         """
         This function will recommend the topN most relevant services given the client request
         """
 
         context_data = "TEST - SERVICES"
-        content = f"""I have an inventory for a {travel_proposal}.
-        I can recommend you a more luxurious based on the location of the activity."""
 
         return self.search_context_data(context_data = context_data, 
                                         content = content,
@@ -238,10 +276,10 @@ class Traveller:
                                         task_type = task_type)
     
 
-    def I_recommend_client(self, 
-                          content,
-                          topN = 3, 
-                          task_type = "retrieval_query"):
+    def I_recommend_client(self,
+                           content,
+                           topN = 3,
+                           task_type = "retrieval_query"):
         """
         This function will recommend the topN most relevant clients given the client request
         """
@@ -318,6 +356,7 @@ class Traveller:
             pprint(response.text)
             return {"clients":client_recommendation, "client_requests":client_request_recommendation, "response":response}
     
+
     def II_recommend_travel_logistics(self,
                          travel_proposal,
                          topN = 3, 
@@ -330,7 +369,7 @@ class Traveller:
         """
         if custom_prompt is None:
             custom_prompt = """
-            I have a few flights, accomodations, and services that I can recommend for a particular travel proposal.
+            I have a few flights, accomodations, activities and services that I can recommend for a particular travel proposal.
             Please summarise them in a travel package format. so for the flights table please get Name, Type, Location and Price and Description information.
             for the accomodations table please get the accomodation details
             for the services table please get the service details, which are all pertinent to building a travel package. 
@@ -338,6 +377,7 @@ class Traveller:
             """
         flights = self.I_recommend_flights(travel_proposal, topN = topN, task_type = task_type)
         accomodations = self.I_recommend_accomodations(travel_proposal, topN = topN, task_type = task_type)
+        activities = self.I_recommend_activities(travel_proposal, topN = topN, task_type = task_type)
         services = self.I_recommend_services(travel_proposal, topN = topN, task_type = task_type)
         if chatbot:
             prompt = f"""
@@ -347,20 +387,24 @@ class Traveller:
             {flights}
             accomodations:
             {accomodations}
+            activities:
+            {activities}
             services:
             {services}
-
             """
             response = self.model_specialist.prompt(model_name = chatbot_model_name,
                                                     prompt = prompt)
             pprint(response.text)
-            return {"flights":flights, "accomodations":accomodations, "services":services, "response":response}
         else:
             pprint(f"flights:\n{flights}")
             pprint(f"accomodations:\n{accomodations}")
+            pprint(f"activities:\n{activities}")
             pprint(f"services:\n{services}")
-            return {"flights":flights, "accomodations":accomodations, "services":services, "response":None}
+            response = None
+
+        return {"flights":flights, "accomodations":accomodations, "activities": activities, "services":services, "response":response}
     
+
     def II_generate_travel_proposal(self,
                                     input_prompt = "I want to go this place in the photo for 3 days! calm vibe",  #"recommend a full day trip travel itinerary for Kelingking Beach, Nusa Penida, Bali, Indonesia.",
                                     model_name = "gemini-pro",
@@ -399,27 +443,18 @@ class Traveller:
                                     travel_proposal,
                                     model_name = "gemini-pro",
                                     topN = 3, 
-                                    task_type = "retrieval_query"):
+                                    task_type = "retrieval_query", 
+                                    ):
             """
             This function will recommend the topN most relevant travel logistics given the client request
             """
             inventory_package = self.II_recommend_travel_logistics(travel_proposal, topN = topN, task_type = task_type)
             
-            UX_prompt = f"""
-                        Generate a travel package for the given trip_recommendation:
-                        {travel_proposal}
+            UX_prompt = f"""You are a travel agent who is given a set of RECOMMENDATIONs for a travel package. 
+                        You are to compile a travel package based on the RECOMMENDATIONs given at the end.
+                        The following is the travel proposal prompt: {travel_proposal}
 
-                        This trip_recommendation comes with the following hotel recommendation:
-                        {inventory_package['accomodations']}
-
-                        This trip_recommendation comes with the following flight recommendation:
-                        {inventory_package['flights']}
-
-                        This trip_recommendation comes with the following services/activities/tours recommendation:
-                        {inventory_package['services']}
-
-                        The package should include the following sections:
-
+                        The package must include the following sections:
                         "Summary"
                         introductory and summary of the trip in one paragraph.
                         The summary should describe in vivid detail, the main attractions, activities, and experiences that the travelers can enjoy in the trip_recommendation. 
@@ -428,24 +463,38 @@ class Traveller:
                         A list of the main features and most exciting aspects of the package.
                         the highlights must end off with a bold line: "Your journey takes you to: x - y - z"
 
-                        "Itinerary & Map" 
-                        This section is an itenerary list that shows the day-by-day plan of the trip, that is also accompanied by a map.
-
+                        "Itinerary" 
+                        This section is an itenerary list that shows the day-by-day, hour-by-hour plan of the trip.
                         The itinerary should include the name, location, and description of each place or activity that the travelers will visit or do each day. 
-                        The itinerary should also indicate the approximate duration and transportation mode for each item.
-
+                        Each day of the itinerary should be planned out from start to end (using information from the RECOMMENDATIONs only).
+                        eg: 
+                        '1600hrs: Fly to location X by flight A (FLIGHT ID: _), 1800hrs: check in at accomodation A (ACCOMODATION ID: _), 2000hrs: dinner at location Y, etc.'
+                        '0800hrs: Breakfast at accomodation A (ACCOMODATION ID: _). 1000hrs: do activity A (ACTIVITY ID: _) at location X, Go to location Y by service B (SERVICE ID: _) 1200hrs: lunch at location Y, 1400hrs: do activity B (ACTIVITY ID: _) at location Z, etc.'
+        
                         A highlights and inclusions section that lists the main features and benefits of the package. 
                         The section should mention what is included in the price, such as flights, accommodation, meals, guides, entrance fees, etc. 
-                        The section should also mention any special offers or discounts that are available for the package.
-                        A dates and pricing section that shows the available dates and prices for the package. 
-                        The section should indicate the departure and return dates, the number of travelers, the total cost, and the payment options for the package. 
-                        The section should also provide a link or contact information for booking or inquiring about the package.
+                        A pricing section that shows the calculated SUM prices for the package (these prices should be referred from the RECOMMENDATIONs only). 
+                        The section must calculate the total cost, using information from the prices of the RECOMMENDATIONs given below only AND NOT generated.
 
-                        All information derived here should be based on the recommendations from the previous steps and MUST not be fabricated.
+                        All information derived here should be based on the RECOMMENDATIONs below and MUST NOT be generated.
+                        All information derived from the RECOMMENDATIONs must be referenced by the relevant ID of the RECOMMENDATION.
+                        If there are no matching RECOMMENDATIONs, then please indicate that there are no matching RECOMMENDATIONs and provide fillers.
 
+                        RECOMMENDATIONs: 
+                        This trip_recommendation comes with the following hotel RECOMMENDATIONs:
+                        {inventory_package['accomodations']}
+
+                        This trip_recommendation comes with the following flight RECOMMENDATIONs:
+                        {inventory_package['flights']}
+
+                        This trip_recommendation comes with the following activities RECOMMENDATIONs:
+                        {inventory_package['activities']}
+
+                        This trip_recommendation comes with the following services RECOMMENDATIONs:
+                        {inventory_package['services']}
                         """
             response_UX = self.model_specialist.prompt(UX_prompt, model_name = model_name)    
             pprint(response_UX.text)                   
-            return response_UX
+            return {"prompt": UX_prompt, "response": response_UX, "recommendations": inventory_package}
                          
 

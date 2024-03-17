@@ -190,13 +190,25 @@ class GHandler:
         """
         Compute the distances between the query and each document in the dataframe
         using the dot product.
+
+        Returns:
+            A pd.Series containing a DataFrame with two columns:
+                - 'Text': The text of the top N passages.
+                - 'Score': The corresponding similarity score for each passage.
         """
+
         query_embedding = genai.embed_content(model=model,
                                                 content=content,
                                                 task_type=task_type)
         dot_products = np.dot(np.stack(dataframe['Embeddings']), query_embedding["embedding"])
         idx = np.argsort(dot_products)[-topN:][::-1]
-        return dataframe.iloc[idx]['Text'] # Return text from indices with top N values
+
+        # Create a DataFrame with passages and scores
+        top_passages = pd.DataFrame({'Text': dataframe.iloc[idx]['Text'], 'Score': dot_products[idx]})
+
+        # Return the DataFrame as a Series with a descriptive name
+        return top_passages.reset_index(drop=True).rename(columns={'Text': 'Passage', 'Score': 'Similarity Score'})
+
     
 
     
