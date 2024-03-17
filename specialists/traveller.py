@@ -62,10 +62,12 @@ class Traveller:
             # embed the data model
             self.tables = self.embed_data_model(self.tables,reembed_table=reembed_table,embed_id = embed_id, embedding_model = self.embedding_model)
         else: 
-            try:
-                self.tables = pickle_helper.pickle_this(data=None, pickle_name=f"TRAVELLER_STATE_{embed_id}", path=self.state_path)
-            except Exception as e:
-                raise ValueError(f"TRAVELLER STATE NOT FOUND: {e} - Please embed the data model first")
+            for tab in data_model_keys.keys():
+                try:
+                    self.tables[tab] = pickle_helper.pickle_this(data=None, pickle_name = f"embedded_{tab}", path=self.state_path)
+                    print(f"TRAVELLER embedding: {tab} - LOADED")
+                except Exception as e:
+                    raise ValueError(f"embedded_{tab} Not found: {e} - Please embed the data model first")
             print("TRAVELLER loaded")
     # =====================================================================
     # DATA MODEL PREPROCESSING
@@ -167,19 +169,19 @@ class Traveller:
                     raise ValueError(f"Embed_df FAILED: \n{e}\n - Please investigate and debug the error")
                 
                 pickle_helper.pickle_this(data=embed_df, pickle_name = f"embedded_{tab}", path=self.state_path)
-                print(f"TRAVELLER embedding: {tab} ({embed_id}{embed_step_id}) - EMBEDDED SAVED")
+                print(f"TRAVELLER embedding: {tab} - EMBEDDED SAVED")
 
             else:
-                tables[tab] = pickle_helper.pickle_this(data=None, pickle_name = f"TRAVELLER_STATE_{embed_id}{embed_step_id}", path=self.state_path)
-                print(f"TRAVELLER embedding: {tab} ({embed_id}{embed_step_id}) - LOADED")
+                tables[tab] = pickle_helper.pickle_this(data=None, pickle_name = f"embedded_{tab}", path=self.state_path)
+                print(f"TRAVELLER embedding: {tab} - LOADED")
 
 
             if embed_step_id == len(tables) - 1:
                 embed_step_id=""
             
-            pickle_helper.pickle_this(data=tables, pickle_name=f"TRAVELLER_STATE_{embed_id}{embed_step_id}", path=self.state_path)
-            print(f"TRAVELLER embedding: {tab} ({embed_id}{embed_step_id}) - SAVED")
-        print(f"TRAVELLER_STATE_{embed_id}{embed_step_id} - SAVED in {self.state_path}")
+        #     pickle_helper.pickle_this(data=tables, pickle_name=f"embedded_data_model_{embed_id}", path=self.state_path)
+        #     print(f"TRAVELLER embedding: {tab} - SAVED")
+        # print(f"TRAVELLER_STATE_{embed_id}{embed_step_id} - SAVED in {self.state_path}")
         return tables
 
 
@@ -440,7 +442,7 @@ class Traveller:
     
 
     def III_generate_travel_package(self,
-                                    travel_proposal,
+                                    initial_query,
                                     model_name = "gemini-pro",
                                     topN = 3, 
                                     task_type = "retrieval_query", 
@@ -448,11 +450,46 @@ class Traveller:
             """
             This function will recommend the topN most relevant travel logistics given the client request
             """
-            inventory_package = self.II_recommend_travel_logistics(travel_proposal, topN = topN, task_type = task_type)
+            # Firstly we segment the client_request into the buckets
+            prompt = f"""You are a prompt engineer for a travel company. Given the following unstructured request from a client: {initial_query}
+                        Segment the query into:
+                        1) Client
+                        2) Client Request
+                        3) Flights
+                        4) Accomodations
+                        5) Activities
+                        6) Services, 
+                        So for example, if a client request is "The client Shaik needs to go Singapore with VIP driver for 5 days, with a focus on arab/malay street",
+                        you would segment it into and return:
+                        'client: Shaik
+                        client_request: The client Shaik needs to go Singapore with VIP driver for 5 days, with a focus on arab/malay street
+                        flights: Singapore
+                        accomodations: Singapore near arab/malay street
+                        activities: segmented_query:arab/malay street tour
+                        services: segmented_query:VIP driver for 5 days'
+                        """
+            segments = self.model_specialist.prompt(model_name = model_name, prompt = prompt)
+            # extract the segments
+            client,client_request,flights,accomodations,activities,services = segments.text.split("\n")
+
+            # Now we can use the segments to generate the travel package
+            # Get historical client data
+            client_recommendation = self.I_recommend_client(client, topN = topN, task_type = task_type)
+            client_request_recommendation = self.I_recommend_client_request(client_request, topN = topN, task_type = task_type)
+            # Get travel logistics
+            flights = self.I_recommend_flights(flights, topN = topN, task_type = task_type)
+            accomodations = self.I_recommend_accomodations(accomodations, topN = topN, task_type = task_type)
+            activities = self.I_recommend_activities(activities, topN = topN, task_type = task_type)
+            services = self.I_recommend_services(services, topN = topN, task_type = task_type)
+
+            # inventory_package = self.II_recommend_travel_logistics(travel_proposal, topN = topN, task_type = task_type)
             
             UX_prompt = f"""You are a travel agent who is given a set of RECOMMENDATIONs for a travel package. 
                         You are to compile a travel package based on the RECOMMENDATIONs given at the end.
-                        The following is the travel proposal prompt: {travel_proposal}
+                        The following is the client request: {initial_query}
+                        And the following is the client's historical matching data:
+                        {client_recommendation}
+                        {client_request_recommendation}
 
                         The package must include the following sections:
                         "Summary"
@@ -482,19 +519,19 @@ class Traveller:
 
                         RECOMMENDATIONs: 
                         This trip_recommendation comes with the following hotel RECOMMENDATIONs:
-                        {inventory_package['accomodations']}
+                        {accomodations}
 
                         This trip_recommendation comes with the following flight RECOMMENDATIONs:
-                        {inventory_package['flights']}
+                        {flights}
 
                         This trip_recommendation comes with the following activities RECOMMENDATIONs:
-                        {inventory_package['activities']}
+                        {activities}
 
                         This trip_recommendation comes with the following services RECOMMENDATIONs:
-                        {inventory_package['services']}
+                        {services}
                         """
             response_UX = self.model_specialist.prompt(UX_prompt, model_name = model_name)    
             pprint(response_UX.text)                   
-            return {"prompt": UX_prompt, "response": response_UX, "recommendations": inventory_package}
+            return {"prompt": UX_prompt, "response": response_UX}
                          
 

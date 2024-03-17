@@ -5,6 +5,7 @@ openpyxl
 google-generativeai 
 anthropic
 pinecone-client
+openpyxl
 
 jupyter-ipywidgets
 tqdm
