@@ -14,30 +14,53 @@ import google.generativeai as genai
 
 
 class GHandler:
-    def __init__(self, API_KEY):
+    """
+    This class is a wrapper around the Google Generative AI API 
+    (to be generalised for other generative AI APIs in the future)
+
+    It allows the user to easily interact with the API and perform various tasks
+    It has the following features 
+    1) text --> text                  ---- IMPLEMENTED
+    2) text + image --> text          ---- IMPLEMENTED
+    3) text + image --> text + image  ---- !! global tech not there yet; Gemini lacks !!
+    4) text + video --> text          ---- https://github.com/mytechnotalent/Gemini
+    5) text + video --> text + video  ---- !! global tech not there yet; SORA) !!
+
+    """ 
+
+    def __init__(self, API_KEY, 
+                 generation_config = {"temperature": 0.9,
+                                      "top_p": 0.95,
+                                      "top_k": 40,
+                                      "max_output_tokens": 1024,
+                                      },
+                 block_threshold="BLOCK_NONE"):
+        """
+        API_KEY: str
+            The API key for the Google Generative AI API
+            BLOCK_NONE = Always show regardless of probability of unsafe content
+            BLOCK_ONLY_HIGH = Block when high probability of unsafe content
+            BLOCK_MEDIUM_AND_ABOVE = Block when medium or high probability of unsafe content
+            BLOCK_LOW_AND_ABOVE = Block when low, medium or high probability of unsafe content
+        """
         self.API_KEY = API_KEY
-        self.generation_config = {
-                                "temperature": 0.9,
-                                "top_p": 0.95,
-                                "top_k": 40,
-                                "max_output_tokens": 1024,
-                                }
+        self.generation_config = generation_config
         self.safety_settings = [
             {
             "category": "HARM_CATEGORY_HARASSMENT",
-            "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+            "threshold": block_threshold
             },
             {
             "category": "HARM_CATEGORY_HATE_SPEECH",
-            "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+            "threshold": block_threshold
             },
             {
             "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-            "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+            "threshold": block_threshold
             },
             {
             "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
-            "threshold": "BLOCK_MEDIUM_AND_ABOVE"
+            "threshold": block_threshold
             },
         ]
 
@@ -65,42 +88,14 @@ class GHandler:
         return response
     
 
-    def prompt_image(self, 
-                      image_path, 
-                      prompt_1,
-                      prompt_2 = None,
-                      model_name="gemini-pro-vision",
-                      generation_config = {
-                                            "temperature": 0.9,
-                                            "top_p": 0.95,
-                                            "top_k": 40,
-                                            "max_output_tokens": 1024,
-                                            },
-                      safety_settings = [
-                                        {
-                                        "category": "HARM_CATEGORY_HARASSMENT",
-                                        "threshold": "BLOCK_MEDIUM_AND_ABOVE"
-                                        },
-                                        {
-                                        "category": "HARM_CATEGORY_HATE_SPEECH",
-                                        "threshold": "BLOCK_MEDIUM_AND_ABOVE"
-                                        },
-                                        {
-                                        "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-                                        "threshold": "BLOCK_MEDIUM_AND_ABOVE"
-                                        },
-                                        {
-                                        "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
-                                        "threshold": "BLOCK_MEDIUM_AND_ABOVE"
-                                        },
-                                        ]
-
-        ):
-        genai.configure(api_key = self.API_KEY)
+    def prompt_image(self,
+                     image_path,
+                     prompt_1,
+                     prompt_2 = None,
+                     model_name="gemini-pro-vision",
+                     ):
         # Set up the model
-        model = genai.GenerativeModel(model_name=model_name,
-                                        generation_config=generation_config,
-                                        safety_settings=safety_settings)
+        model = self.build_model(model_name)
 
         # Validate that an image is present
         if not (img := Path(image_path)).exists():
@@ -150,7 +145,7 @@ class GHandler:
         print(response.text)
         return response
     
-    def _embed_fn(self,
+    def embed_text(self,
                   title,
                   text,
                   model='models/embedding-001', ):
@@ -173,7 +168,7 @@ class GHandler:
         assert text in df.columns, f"text: '{text}' column not found in dataframe"
         
 
-        df['Embeddings'] = df.apply(lambda row: self._embed_fn(row[title], row[text], model=model), axis=1)
+        df['Embeddings'] = df.apply(lambda row: self.embed_text(str(row[title]), str(row[text]), model=model), axis=1)
 
         return df
 
@@ -187,50 +182,33 @@ class GHandler:
                                     task_type="retrieval_query")
         
     def find_best_passage(self,
-                          query, 
+                          content, 
                           dataframe, 
+                          topN = 1,
                           task_type="retrieval_query",
-                          model='models/embedding-001'):
+                          model='models/embedding-001') -> pd.Series:
         """
         Compute the distances between the query and each document in the dataframe
         using the dot product.
+
+        Returns:
+            A pd.Series containing a DataFrame with two columns:
+                - 'Text': The text of the top N passages.
+                - 'Score': The corresponding similarity score for each passage.
         """
+
         query_embedding = genai.embed_content(model=model,
-                                                content=query,
+                                                content=content,
                                                 task_type=task_type)
         dot_products = np.dot(np.stack(dataframe['Embeddings']), query_embedding["embedding"])
-        idx = np.argmax(dot_products)
-        return dataframe.iloc[idx]['Text'] # Return text from index with max value
+        idx = np.argsort(dot_products)[-topN:][::-1]
+
+        # Create a DataFrame with passages and scores
+        top_passages = pd.DataFrame({'Text': dataframe.iloc[idx]['Text'], 'Score': dot_products[idx]})
+
+        # Return the DataFrame as a Series with a descriptive name
+        return top_passages.reset_index(drop=True).rename(columns={'Text': 'Passage', 'Score': 'Similarity Score'})
+
     
-    def build_knowledgebase(self,
-                            data,
-                            knowledge_domain = "travel", 
-                            data_type = "csv"):
-        """
-        This is a higher level function that when called,
-        will allow the user to input any kind of unstructured or structured data 
-        (images, pdf, excel sheets, word documents, etc)
-
-        The function will automatically process the data and store it in a structured format
-        for further embedding and retrieval queries. 
-
-        The knowledge_domain will specify the kind of data that the user is inputting.
-        So if the user is inputting travel data, the knowledge_domain will be "travel"
-        if the user is inputting islamic data, the knowledge_domain will be "islam"
-
-        This way the user can input any kind of data and the function will automatically process it
-        and store it in a structured format for further retrieval queries.
-        """
-        
-        if data_type != "csv":
-            raise ValueError("Data type not supported. Please input a csv file")
-        else:
-            df = pd.read_csv(data)
-            df = self.clean_df(df)
-            df = self.embed_df(df)
-            return df
-
-    def clean_process_df(self, df):
-        df.apply(lambda row: ', '.join([f"{col}: {row[col]}" for col in df.columns]), axis=1)
 
     
