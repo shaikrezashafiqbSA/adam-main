@@ -466,21 +466,19 @@ class Traveller:
                             4) Accomodations
                             5) Activities
                             6) Services, 
-                            So for example, if a client request is "The client Shaik needs to go Singapore with VIP driver for 5 days, with a focus on arab/malay street",
+                            So for example, if a client request is "The client Hafeez needs to go Singapore with VIP driver for 5 days, with a focus on arab/malay street",
                             you would segment it into and return in the following format:
-                            ""client: Shaik
-                            client_request: The client Shaik needs to go Singapore with VIP driver for 5 days, with a focus on arab/malay street
+                            ""client: Hafeez
                             flights: Singapore airport
                             accomodations: near arab/malay street, Singapore
                             activities: arab/malay street tour for one specific day
                             services: VIP driver for 5 days""
-                            ALL segments must be returned.
-                            If any of the segments are not present, then place Null. 
+                            ALL segments (client, flights, accomodations, activities, services) must be returned, fill with Null segment is empty. 
                             """
                 segments = self.model_specialist.prompt(model_name = model_name, prompt = prompt)
                 # extract the segments
                 try:
-                    client,client_request,flights,accomodations,activities,services = segments.text.split("\n")
+                    client,flights,accomodations,activities,services = segments.text.split("\n")
                 except Exception as e:
                     print(segments.text)
                     raise ValueError(f"segments not extracted: {e}")
@@ -488,7 +486,7 @@ class Traveller:
                 # Now we can use the segments to generate the travel package
                 # Get historical client data
                 client_recommendation = self.I_recommend_client(client, topN = topN, task_type = task_type)
-                client_request_recommendation = self.I_recommend_client_request(client_request, topN = topN, task_type = task_type)
+                client_request_recommendation = self.I_recommend_client_request(client, topN = topN, task_type = task_type)
                 # Get travel logistics
                 flights = self.I_recommend_flights(flights, topN = topN, task_type = task_type)
                 accomodations = self.I_recommend_accomodations(accomodations, topN = topN, task_type = task_type)
@@ -500,10 +498,11 @@ class Traveller:
                 travel_package_prompt = f"""You are a travel agent who is given a set of RECOMMENDATIONs for a travel package. 
                             You are to compile a travel package based on the RECOMMENDATIONs given at the end.
                             The following is the client request from client {client}: {initial_query}
-                            And the following is the client's historical matching data:
+                            And the following is the search result for the client:
                             {client_recommendation}
+                            And this is the search result for the client requests in the past: 
                             {client_request_recommendation}
-                            Based on the client request and the historical matching data, you are to compile a travel package for the client.
+                            Based on the client search and the historical client requests, you are to compile a travel package for the client that meets his needs.
 
                             The package must include the following sections:
                             "Summary"
