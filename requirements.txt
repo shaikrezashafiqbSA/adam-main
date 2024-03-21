@@ -3,11 +3,12 @@ pandas
 python-dotenv
 openpyxl
 google-generativeai 
+google-cloud-aiplatform
 anthropic
 pinecone-client
 
 tiktoken
 jupyter-ipywidgets
 tqdm
-
-PyPDF2
+easyocr
+python-telegram-bot
