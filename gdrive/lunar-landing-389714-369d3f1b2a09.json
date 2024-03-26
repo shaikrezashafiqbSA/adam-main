@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "lunar-landing-389714",
+  "private_key_id": "369d3f1b2a09f3832de3876392d5301675f1083d",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCKh60QWAzO6+PQ\nGVTA5KUX+mEse/IXqPHj/PkBzJzC+wVrqHyw7QjkKYXCZmJH6E14DAo9jOOUP8vV\nYSs5oXS5e/9Ds/0giYnWMErUmfvnzOjJN6XHyIGtd7mTUp+4fWfBUVXvt8bZx+/t\neHqUvJUTcRMa8Os03bFFRpwAyGLUdqxGFYHhs31aBnfI4ICQS5YUSiPlIIcM1iaw\nv43KOpi8HyeA/OK94WZSP4Hrc7CVy2GibazYBBfMyqcH60Vs4/gKPKdui7AGZaoC\n5ilP+3X5yzr4h/MRXUdy4Bu9iaTh5G/xFe6fBTlxDmtB9LhLv3VEmBuOW8kZ3VEJ\nCVKTlaaRAgMBAAECggEAIC1EgxvYmcWL7F295HIXcNrc8F63zEwXJ2wukH7s2JNC\n3o9LqzLbklectJtgb7BjMiOly0cq41fwKheAWUoJ2T2WfKzVelXIGOKttvUvYFel\nqHtO+/k0Oc0p4zDZXZpvW6VfTyeCPjqlHaUS3/JvtAzbMbJNB8IIt30fpkTlQ9EX\nUK5SqvJGwcRij+gUYUEvY+PFXfbhVq1TikbojWeUquWE5Anairf3nJXroiDmfrTa\nRjbxnwK4h1zm1pqbvGc/0IIf1VLTORskbQwuDSecBSEUtLE1Q9b9etSlJHHQyomC\nduCPnvbu3CC8F9PNHu346TwF8qukjaiRsk5nr5b8WQKBgQDAcU6KEccQiYOLCIX+\nRswmiJY74ACAr+ljO+FPvbQ0vg/2KTL6AUDTXTkAjlorRl0HAQ33LKQdFQqEkAcT\nFQR55g4WZfa5bTAS9az3QKtMgi19ytKa/4bLIor8BiuoproOoSEeZVpoedy56sEN\np8DzAgEt6is4tgXQnmLA9NlEPQKBgQC4SCY9dMZyyKwWenedXZfgig90dONcLiUf\na3FlVkqarIjnCPzQP++Vi8yxRmvOJvivL6kemeeM9510RGO7kCbtuB2TTgJTJzUt\nb7Yt7PHH5e904pqqC1vh/DpAHPXqmcp63jRKO9PNgjZFjt5ajZvg6Y1MICgAE5I5\nvo71JPfM5QKBgAUD7vQSOonny5HYCwXxemiWrrOoxtqTuxVm/hxB6Wxmd6wGrtlt\nJu9bQp0NGLSABPSlxmNmunA3mCqURlrs9Uzn/f3/ckqq2dHkrTlUaiJ4Ug8xNgPs\nHOs2X0DqOEEQ91BiSqasJYsLggEmaRmeAZ1TtAwqSi4UMFqbhh9ZQkBRAoGAbyi2\nSGPkQODjTTvaY0ZNktg0sl6/tp7vLaC16ha/McXZXuOA/G1Uq7SEaHq+FMBVSfdJ\n4HedwN6sT7HhJwaxNLvWu0BXDqmb3iiAj/tZbOc6Jht6iBAKAKsQyBOwEy9pf+wB\nRrYH8PMWoaaoYZ8B5A19een7tvAXSFW2DhGamDECgYEApuM8iWeDKzqYlUPxbVmG\n5JCpr/WUlM4u1XmyjiVKlfflBzEpZNltWV29C3Y4H59H9tMLZJVhz0l0byVBdwOy\ndkWJaP3MyTSDz8jyZC85UVq0IqYIfy6+6PBRvU9n42D9pVbxKgs9LTkDmmyTb24B\nGqenXuxT/vfh9rMHIIMJaHI=\n-----END PRIVATE KEY-----\n",
+  "client_email": "smartworldtravel-test@lunar-landing-389714.iam.gserviceaccount.com",
+  "client_id": "115353302319445403925",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/smartworldtravel-test%40lunar-landing-389714.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

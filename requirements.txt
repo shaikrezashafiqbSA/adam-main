@@ -5,11 +5,8 @@ openpyxl
 google-generativeai 
 google-cloud-aiplatform
 anthropic
-pinecone-client
 
-tiktoken
-jupyter-ipywidgets
-tqdm
-easyocr
 python-telegram-bot
 gspread
+PyPDF2
+Pillow

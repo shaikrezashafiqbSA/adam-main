@@ -1,4 +1,6 @@
+import re
 import logging
+import pandas as pd
 from telegram import Update
 from telegram.ext import ApplicationBuilder, ContextTypes, CommandHandler, MessageHandler, filters
 
@@ -6,15 +8,28 @@ from settings import TELEGRAM_TRAVELLER_API_KEY, GEMINI_API_KEY
 import requests
 from PIL import Image
 from io import BytesIO
-import os 
+import os
 
-
+from gdrive.gdrive_handler import GspreadHandler
 from llm_handler.GHandler import GHandler
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
+
+# Initialize the GspreadHandler instance
+gspread_handler = GspreadHandler(credentials_filepath='./gdrive/lunar-landing-389714-369d3f1b2a09.json')
+
+
+def sanitize_file_name(caption):
+    """
+    Sanitize the caption by removing/replacing invalid characters for file names.
+    """
+    # Remove or replace invalid characters
+    cleaned_caption = re.sub(r'[^a-zA-Z0-9\s\-_\.]', '_', caption)
+    return cleaned_caption
+
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = """
@@ -58,7 +73,8 @@ async def image_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     response = requests.get(file.file_path)
     img = Image.open(BytesIO(response.content))
     
-    # Save the image file locally
+    # Save the image file locally by caption and unique id
+
     file_name = f"{update.message.photo[-1].file_unique_id}.jpg"  # Change the extension if needed
     file_path = os.path.join("./database/travel/telegram/", file_name)
 
@@ -91,9 +107,32 @@ async def image_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                                   prompt_2 = None,
                                         )
     
-    response_text = 
-    # LLM analyse image
+    # Assuming you have the image caption and the LLM response text
+    image_caption = update.message.caption or ""
+    llm_response_text = g_response.text
 
+    # Extract the column keys from the image caption
+    caption_parts = image_caption.split('-')
+    column_keys = [part.strip() for part in caption_parts]
+
+    # Create a DataFrame with the LLM response text as the data
+    data = [llm_response_text]
+    df = pd.DataFrame([data], columns=column_keys)
+
+    # Specify the sheet and worksheet names
+    sheet_name = "Your Sheet Name"
+    worksheet_name = "Your Worksheet Name"
+
+    try:
+        # Append the data to the Google Sheet
+        gspread_handler.update_cols(df, sheet_name, worksheet_name)
+    except ValueError as e:
+        print(f"Error: {e}")
+        # Handle the error, e.g., send an error message to the user
+
+    # Send a success message to the user
+    success_text = f"Data uploaded to '{sheet_name}' - '{worksheet_name}'"
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=success_text)
     await context.bot.send_message(chat_id=update.effective_chat.id, text=g_response.text)
 
 if __name__ == '__main__':
