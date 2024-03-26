@@ -72,14 +72,16 @@ async def image_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     file = await context.bot.get_file(update.message.photo[-1].file_id)
     response = requests.get(file.file_path)
     img = Image.open(BytesIO(response.content))
-    
-    # Save the image file locally by caption and unique id
 
-    file_name = f"{update.message.photo[-1].file_unique_id}.jpg"  # Change the extension if needed
-    file_path = os.path.join("./database/travel/telegram/", file_name)
 
     # Get the caption of the photo, if any
     caption = update.message.caption or ""
+
+    # Save the image file locally by caption and unique id
+    sanitized_caption = sanitize_file_name(caption)
+    file_name = f"{sanitized_caption}.jpg"  # Add .jpg extension
+    file_path = os.path.join("./database/travel/telegram/", file_name)
+
     # You can add image processing logic here (e.g., resize, convert format)
     text = f"Image ({caption}) received\n ---> processing..."  # Update message after processing
     await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
@@ -106,22 +108,23 @@ async def image_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                                   prompt_1 = prompt_1,
                                   prompt_2 = None,
                                         )
-    
+    llm_response_text = g_response.text
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=llm_response_text)
+
     # Assuming you have the image caption and the LLM response text
     image_caption = update.message.caption or ""
-    llm_response_text = g_response.text
 
     # Extract the column keys from the image caption
     caption_parts = image_caption.split('-')
     column_keys = [part.strip() for part in caption_parts]
-
+    column_names = ["meta", "data"]
     # Create a DataFrame with the LLM response text as the data
-    data = [llm_response_text]
-    df = pd.DataFrame([data], columns=column_keys)
+    data = [{"meta": image_caption, "data": llm_response_text}]
+    df = pd.DataFrame(data, columns=column_names)
 
     # Specify the sheet and worksheet names
-    sheet_name = "Your Sheet Name"
-    worksheet_name = "Your Worksheet Name"
+    sheet_name = "Ingestor"
+    worksheet_name = "ingested"
 
     try:
         # Append the data to the Google Sheet
@@ -131,9 +134,8 @@ async def image_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Handle the error, e.g., send an error message to the user
 
     # Send a success message to the user
-    success_text = f"Data uploaded to '{sheet_name}' - '{worksheet_name}'"
+    success_text = f"Data: \n{df}\nuploaded to '{sheet_name}' - '{worksheet_name}'"
     await context.bot.send_message(chat_id=update.effective_chat.id, text=success_text)
-    await context.bot.send_message(chat_id=update.effective_chat.id, text=g_response.text)
 
 if __name__ == '__main__':
     application = ApplicationBuilder().token(TELEGRAM_TRAVELLER_API_KEY).build()
