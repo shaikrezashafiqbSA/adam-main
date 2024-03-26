@@ -68,11 +68,11 @@ class GHandler:
     def build_model(self, model_name,):
         genai.configure(api_key = self.API_KEY)
 
-        model = genai.GenerativeModel(model_name=model_name,
+        self.model = genai.GenerativeModel(model_name=model_name,
                                         generation_config=self.generation_config,
                                         safety_settings=self.safety_settings)
         
-        return model
+        return self.model
     
 
     def show_available_models(self,):
@@ -80,6 +80,15 @@ class GHandler:
             if 'generateContent' in m.supported_generation_methods:
                 print(m.name)
 
+    def count_tokens(self, text):
+        return self.model.count_tokens(text)
+    
+    def prompt_chat(self, content, stream = False):
+        chat = self.model.start_chat(history=[])
+        response = chat.send_message(content = content, 
+                                     generation_config = self.generation_config,
+                                     safety_settings = self.safety_settings,
+                                     stream = stream)
 
     def prompt(self, prompt,model_name="gemini-pro"):
         model = self.build_model(model_name)
