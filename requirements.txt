@@ -12,3 +12,4 @@ jupyter-ipywidgets
 tqdm
 easyocr
 python-telegram-bot
+gspread

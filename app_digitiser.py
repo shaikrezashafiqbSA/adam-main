@@ -17,7 +17,13 @@ logging.basicConfig(
 )
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await context.bot.send_message(chat_id=update.effective_chat.id, text="Traveller here! Send me an image of your travel itinerary and I will digitise it for you!")
+    text = """
+    I'm a bot that can help you digitise your travel content. 
+    --->  TABLE - item type - item name
+    example: 
+    ---> "Supplier - Flier - KELANTAN Trip 2022" 
+    """
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
 
 async def image_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Check if the message is a reply to the bot or mentions the bot in a group
@@ -59,14 +65,16 @@ async def image_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Get the caption of the photo, if any
     caption = update.message.caption or ""
     # You can add image processing logic here (e.g., resize, convert format)
-    text = f"Image ({caption}) received\n ---> <Gemini> processing..."  # Update message after processing
+    text = f"Image ({caption}) received\n ---> processing..."  # Update message after processing
     await context.bot.send_message(chat_id=update.effective_chat.id, text=text)
 
     with open(file_path, "wb") as f:
         f.write(response.content) 
     # ANALYSES HERE
     prompt_1 = """The image is a travel itinerary that i want to digitise so that i can populate a database. 
-                Help analyse the content and reproduce it in a structured format such that it is easily extractable
+                Help analyse the content and reproduce it in a structured format such that it is easily extractable. 
+                If the image contains text, please transcribe the text (providing both translation and original text if applicable)
+                If the image contains imageries, please describe the image in detail.
                 """
     g_handler = GHandler(GEMINI_API_KEY,                  
                 generation_config = {"temperature": 0.9,
@@ -82,6 +90,8 @@ async def image_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                                   prompt_1 = prompt_1,
                                   prompt_2 = None,
                                         )
+    
+    response_text = 
     # LLM analyse image
 
     await context.bot.send_message(chat_id=update.effective_chat.id, text=g_response.text)
