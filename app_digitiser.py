@@ -65,6 +65,7 @@ async def image_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Get the caption of the photo, if any
     caption = update.message.caption or ""
+    table_name, meta_data = caption.split(" - ")
     sanitized_caption = sanitize_file_name(caption)
 
     # Identify the file extension of the image
@@ -117,7 +118,7 @@ async def image_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         with open(file_path, "wb") as f:
             f.write(response.content) 
         # ANALYSES HERE
-        prompt_1 = "You are an OCR bot. Extract ALL the text from the image as raw text. Ensure all phone numbers and emails are extracted. OCR text output is sometimes wrong, so correct it where needed."
+        prompt_1 = "You are an OCR bot. Extract ALL the text from the image as raw text. Ensure all phone numbers and emails are extracted ACCURATELY. OCR text output is sometimes wrong, so correct it where needed."
         g_handler = GHandler(GEMINI_API_KEY,                  
                     generation_config = {"temperature": 0.9,
                                         "top_p": 0.95,
@@ -152,16 +153,16 @@ async def image_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     image_caption = update.message.caption or ""
 
     # Extract the column keys from the image caption
-    caption_parts = image_caption.split('-')
+    caption_parts = image_caption.split(' - ')
 
     column_names = ["meta", "data"]
     # Create a DataFrame with the LLM response text as the data
-    data = [{"meta": image_caption, "data": llm_response_text}]
+    data = [{"meta": caption_parts[-1], "data": llm_response_text}]
     df = pd.DataFrame(data, columns=column_names)
 
     # Specify the sheet and worksheet names
-    sheet_name = "Ingestor"
-    worksheet_name = "ingested"
+    sheet_name = "SWTT DB"
+    worksheet_name = table_name #"Flyers"
 
     try:
         # Append the data to the Google Sheet
