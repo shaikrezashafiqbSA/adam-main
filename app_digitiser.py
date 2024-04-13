@@ -20,8 +20,8 @@ logging.basicConfig(
 )
 
 # Initialize the GspreadHandler instance
-gspread_handler = GspreadHandler(credentials_filepath='./gdrive/lunar-landing-389714-369d3f1b2a09.json')
-
+gspread_handler = GspreadHandler(credentials_filepath='./gdrive/phrasal-ability-419201-d527372ace3b.json')
+sheet_name = "Master Database" 
 
 def sanitize_file_name(caption):
     """
@@ -154,15 +154,14 @@ async def image_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Extract the column keys from the image caption
     caption_parts = image_caption.split(' - ')
-
+    sheet_name = "Master Database" 
     column_names = ["meta", "data"]
     # Create a DataFrame with the LLM response text as the data
     data = [{"meta": caption_parts[-1], "data": llm_response_text}]
     df = pd.DataFrame(data, columns=column_names)
 
     # Specify the sheet and worksheet names
-    sheet_name = "SWTT DB"
-    worksheet_name = table_name #"Flyers"
+    worksheet_name = caption_parts[0] #"Flyers"
 
     try:
         # Append the data to the Google Sheet
