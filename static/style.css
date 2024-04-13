@@ -1,0 +1,18 @@
+#chat-container {
+    /* Style your container */
+    width: 1000px; 
+    margin: 20px auto;
+    border: 1px solid #ddd;
+    padding: 20px;
+}
+
+#chat-window {
+    /* Style the chat display area */
+    height: 800px; /* Adjust the height as needed */
+    overflow-y: auto;
+    margin-bottom: 10px;
+}
+
+#chat-form {
+    /* Style the form */
+}

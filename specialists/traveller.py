@@ -1,6 +1,5 @@
 import pandas as pd
 from utils import pickle_helper
-import tiktoken
 from pprint import pprint
 
 
@@ -551,8 +550,8 @@ class Traveller:
                                     "activities":activities,
                                     "services":services}
                 
-                token_count = self.calculate_token_count(travel_package_prompt) 
-                if input(f"Send followup prompt (token count ~ {token_count}) to LLM? (y/n): ") == "y":
+                token_count = self.count_tokens(travel_package_prompt) 
+                if True: #input(f"Send followup prompt (token count ~ {token_count}) to LLM? (y/n): ") == "y":
                     response_travel_package = self.model_specialist.prompt(travel_package_prompt, model_name = model_name)    
                     print(response_travel_package.text)   
                     self.response_travel_package = response_travel_package.text       
@@ -570,9 +569,9 @@ class Traveller:
                 {followup_query}
                 """
                 # check token size
-                token_count = self.calculate_token_count(followup_prompt)
+                token_count = self.count_tokens(followup_prompt)
                 # ask user for confirmation to send prompt to LLM
-                if input(f"Send followup prompt (token count ~ {token_count}) to LLM? (y/n): ") == "y":
+                if True: #input(f"Send followup prompt (token count ~ {token_count}) to LLM? (y/n): ") == "y":
                     response_travel_package = self.model_specialist.prompt(followup_prompt, model_name = model_name)
                     print(response_travel_package.text)
                     self.response_travel_package = response_travel_package.text   
@@ -582,9 +581,6 @@ class Traveller:
         # encoding for Codex models (e.g., Gemini-Pro)
         enc = tiktoken.get_encoding(model)
         tokens = enc.encode(text)
+        print(f"Token size of the prompt for {model} ~ {len(tokens)}")
         return len(tokens)
 
-    def calculate_token_count(self, text, model="cl100k_base"):
-        token_count = self.count_tokens(text, model)
-        print(f"Token size of the prompt for {model} ~ {token_count}")
-        return token_count 
