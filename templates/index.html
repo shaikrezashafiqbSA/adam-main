@@ -1,14 +1,21 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Traveller Chatbot</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TravellerAI Chatbot</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+    <header>
+        <img src="{{ url_for('static', filename='travellerAI_logo.jpg') }}" alt="TravellerAI Logo">
+        <h1>TravellerRAG Chatbot</h1>
+        <button id="reset-button">Start New Conversation</button> 
+      </header>
     <div id="chat-container">
         <div id="chat-window"></div>
         <form id="chat-form">
-            <input type="text" id="message-input" placeholder="Type your message...">
+            <input type="text" id="message-input" placeholder="Narrate/Materialise an experience. \n[Optimise by including (a) departure-destinations (b) duration (c) experience (d) budget]">
             <button type="submit">Send</button>
         </form>
     </div>

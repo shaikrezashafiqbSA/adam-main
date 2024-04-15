@@ -1,18 +1,86 @@
-#chat-container {
-    /* Style your container */
-    width: 1000px; 
-    margin: 20px auto;
-    border: 1px solid #ddd;
+body {
+    font-family: sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #F4F1DE;
+}
+
+header {
+    background-color: #F4F1DE;
     padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #3D405B; /* Add a black bottom border */
+}
+
+header img {
+    width: 100px; /* Adjust logo size */
+}
+
+h1 {
+    font-size: 1.5em;
+    margin: 0;
+}
+
+#chat-container {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    width: 80%;
+    margin: 20px auto;
+    padding: 20px;
+    border: 1px solid #ddd; 
 }
 
 #chat-window {
-    /* Style the chat display area */
-    height: 800px; /* Adjust the height as needed */
+    flex: 1;
     overflow-y: auto;
     margin-bottom: 10px;
+    padding: 10px;
+    background-color: #3D405B; /* Matching background for journal effect */
+    border: 1px solid #0e0303;
+    color: #fbfcff; /* Matching text color */
+    
+}
+
+#chat-window p { /* Target all paragraphs within the chat window */
+    margin: 8px 0; /* Add some spacing between chat elements */
+}
+
+#chat-window p strong { /* Target the 'Bot:' and 'You:' labels */
+    color: #684a23; /* Sepia-like tone for bot's output */
+}
+
+#chat-window p strong:nth-child(1) { /* Style the first 'strong' element (Bot) */
+    color: rgb(190, 82, 10); 
+}
+
+#chat-window p strong:nth-child(2) { /* Style the second 'strong' element (You) */
+    color: forestgreen;
 }
 
 #chat-form {
-    /* Style the form */
+    flex: 0; /* Prevent the form from pushing the chat-window */
+    display: flex; /* Allow internal elements to be arranged side-by-side */
+    align-items: center;
+}
+
+#message-input {
+    flex: 1; 
+    padding: 10px;
+    margin-right: 10px;
+    border: 1px solid #ddd;
+    background-color: #3D405B; /* White input box to contrast with background*/
+    color: #fbfcff; /* Matching text color */
+}
+
+/* Loading Indicator Styles */
+.loading-indicator {
+    display: none; /* Initially hidden */
+    text-align: center;
+}
+
+.loading-indicator img {
+    width: 50px;
 }

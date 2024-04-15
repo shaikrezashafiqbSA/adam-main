@@ -30,7 +30,7 @@ class Traveller:
                             generation_config = {"temperature": 0.9,
                                                 "top_p": 0.95,
                                                 "top_k": 40,
-                                                "max_output_tokens": 1024,
+                                                #"max_output_tokens": 4000,
                                                 },
                             block_threshold="BLOCK_NONE",
                             )
@@ -444,9 +444,45 @@ class Traveller:
     # these are higher level skills that can do higher dimension tasks
     # eg; given inventory recommendations, wrap LLM around it to provide a more human friendly response
     
+    def III_semantic_decomposition(self, unstructured_query, model_name = "gemini-pro"):
+        # Firstly we segment the client_request into the buckets
+        prompt = f"""You are a prompt engineer for a travel company. Given the following unstructured request from a client: {unstructured_query}
+                    Segment the query into:
+                    ""1) client
+                    2) flights
+                    3) accomodations
+                    4) activities
+                    5) services""
+                    So for example, if a client request is "The client Hafeez needs to go Singapore with VIP driver for 5 days, with a focus on arab/malay street",
+                    you would segment it into and return in the following format:
+                    ""client: Hafeez
+                    flights: Singapore airport
+                    accomodations: near arab/malay street, Singapore
+                    activities: arab/malay street tour for one specific day
+                    services: VIP driver for 5 days""
+                    REQUIREMENTS:
+                    ALL segments (client, flights, accomodations, activities, services) must be returned, else fill with "NA" if the unstructured request from a client is incomplete.
+                    Example: "i want to go bali from singapore for 4 days with a cultural experience" -->
+                    ""client: NA
+                    flights: singapore to bali to singapore
+                    accomodations: comfortable accomodations in bali
+                    activities: bali cultural experience
+                    services: NA""
+                    """
+        itinerary_buckets = self.model_specialist.prompt(model_name = model_name, prompt = prompt)
+        print(itinerary_buckets.text)
+        # extract the segments
+        try:
+            client,flights,accomodations,activities,services = itinerary_buckets.text.split("\n")
+            return {"client":client, "flights":flights, "accomodations":accomodations, "activities":activities, "services":services}
+        except Exception as e:
+            print(itinerary_buckets.text)
+            raise ValueError(f"itinerary_buckets not extracted: {e}")
+        
 
     def III_generate_travel_package(self,
                                     initial_query = None,
+                                    itinerary_buckets = None,
                                     followup_query = None,
                                     model_name = "gemini-pro",
                                     topN = 3, 
@@ -456,47 +492,20 @@ class Traveller:
             This function will recommend the topN most relevant travel logistics given the client request
             """
             if followup_query is None:
-                # Firstly we segment the client_request into the buckets
-                prompt = f"""You are a prompt engineer for a travel company. Given the following unstructured request from a client: {initial_query}
-                            Segment the query into:
-                            1) Client
-                            2) Client Request
-                            3) Flights
-                            4) Accomodations
-                            5) Activities
-                            6) Services, 
-                            So for example, if a client request is "The client Hafeez needs to go Singapore with VIP driver for 5 days, with a focus on arab/malay street",
-                            you would segment it into and return in the following format:
-                            ""client: Hafeez
-                            flights: Singapore airport
-                            accomodations: near arab/malay street, Singapore
-                            activities: arab/malay street tour for one specific day
-                            services: VIP driver for 5 days""
-                            ALL segments (client, flights, accomodations, activities, services) must be returned, fill with Null segment is empty. 
-                            """
-                segments = self.model_specialist.prompt(model_name = model_name, prompt = prompt)
-                # extract the segments
-                try:
-                    client,flights,accomodations,activities,services = segments.text.split("\n")
-                except Exception as e:
-                    print(segments.text)
-                    raise ValueError(f"segments not extracted: {e}")
                 
-                # Now we can use the segments to generate the travel package
-                # Get historical client data
-                client_recommendation = self.I_recommend_client(client, topN = topN, task_type = task_type)
-                client_request_recommendation = self.I_recommend_client_request(client, topN = topN, task_type = task_type)
-                # Get travel logistics
-                flights = self.I_recommend_flights(flights, topN = topN, task_type = task_type)
-                accomodations = self.I_recommend_accomodations(accomodations, topN = topN, task_type = task_type)
-                activities = self.I_recommend_activities(activities, topN = topN, task_type = task_type)
-                services = self.I_recommend_services(services, topN = topN, task_type = task_type)
+                # Now we can use the segments to find matching travel package constituents
+                client_recommendation = self.I_recommend_client(itinerary_buckets["client"], topN = topN, task_type = task_type)
+                client_request_recommendation = self.I_recommend_client_request(itinerary_buckets["client"], topN = topN, task_type = task_type)
+                flights = self.I_recommend_flights(itinerary_buckets["flights"], topN = topN, task_type = task_type)
+                accomodations = self.I_recommend_accomodations(itinerary_buckets["accomodations"], topN = topN, task_type = task_type)
+                activities = self.I_recommend_activities(itinerary_buckets["activities"], topN = topN, task_type = task_type)
+                services = self.I_recommend_services(itinerary_buckets["services"], topN = topN, task_type = task_type)
 
                 # inventory_package = self.II_recommend_travel_logistics(travel_proposal, topN = topN, task_type = task_type)
                 
                 travel_package_prompt = f"""You are a travel agent who is given a set of RECOMMENDATIONs for a travel package. 
                             You are to compile a travel package based on the RECOMMENDATIONs given at the end.
-                            The following is the client request from client {client}: {initial_query}
+                            The following is the client request from client {itinerary_buckets["client"]}: {initial_query}
                             And the following is the search result for the client:
                             {client_recommendation}
                             And this is the search result for the client requests in the past: 
@@ -504,27 +513,31 @@ class Traveller:
                             Based on the client search and the historical client requests, you are to compile a travel package for the client that meets his needs.
 
                             The package must include the following sections:
-                            "Summary"
+                            ***Summary***
                             introductory and summary of the trip in one paragraph.
                             The summary should describe in vivid detail, the main attractions, activities, and experiences that the travelers can enjoy in the trip_recommendation. 
 
-                            "Journey Highlights"
+                            ***Journey Highlights***
                             A list of the main features and most exciting aspects of the package.
                             the highlights must end off with a bold line: "Your journey takes you to: x - y - z"
 
-                            "Itinerary" 
+                            ***Itinerary*** 
                             This section is an itenerary list that shows the day-by-day, hour-by-hour plan of the trip.
                             The itinerary should include the name, location, and description of each place or activity that the travelers will visit or do each day. 
                             Each day of the itinerary should be planned out from start to end (using information from the RECOMMENDATIONs only).
                             eg: 
-                            '1600hrs: Fly to location X by flight A (FLIGHT ID: _), 1800hrs: check in at accomodation A (ACCOMODATION ID: _), 2000hrs: dinner at location Y, etc.'
-                            '0800hrs: Breakfast at accomodation A (ACCOMODATION ID: _). 1000hrs: do activity A (ACTIVITY ID: _) at location X, Go to location Y by service B (SERVICE ID: _) 1200hrs: lunch at location Y, 1400hrs: do activity B (ACTIVITY ID: _) at location Z, etc.'
+                            '1600hrs: Fly to location X by flight A (FLIGHT ID: 12), 1800hrs: check in at accomodation A (ACCOMODATION ID: 32), 2000hrs: dinner at location Y, etc.'
+                            '0800hrs: Breakfast at accomodation A (ACCOMODATION ID: 321). 1000hrs: do activity A (ACTIVITY ID: 2) at location X, Go to location Y by service B (SERVICE ID: 98) 1200hrs: lunch at location Y, 1400hrs: do activity B (ACTIVITY ID: 12) at location Z, etc.'
             
-                            A highlights and inclusions section that lists the main features and benefits of the package. 
+                            ***Highlights and Inclusions***
+                            This section lists the main features and benefits of the package. 
                             The section should mention what is included in the price, such as flights, accommodation, meals, guides, entrance fees, etc. 
-                            A pricing section that shows the calculated SUM prices for the package (these prices should be referred from the RECOMMENDATIONs only). 
+                            
+                            ***Pricing***
+                            This section shows the calculated SUM prices for the package (these prices should be referred from the RECOMMENDATIONs only). 
                             The section must calculate the total cost, using information from the prices of the RECOMMENDATIONs given below only AND NOT generated.
 
+                            NOTE:
                             All information derived here should be based on the RECOMMENDATIONs below and MUST NOT be generated.
                             All information derived from the RECOMMENDATIONs must be referenced by the relevant ID of the RECOMMENDATION.
                             If there are no matching RECOMMENDATIONs, then please indicate that there are no matching RECOMMENDATIONs and provide fillers.
@@ -550,13 +563,11 @@ class Traveller:
                                     "activities":activities,
                                     "services":services}
                 
-                token_count = self.count_tokens(travel_package_prompt) 
-                if True: #input(f"Send followup prompt (token count ~ {token_count}) to LLM? (y/n): ") == "y":
-                    response_travel_package = self.model_specialist.prompt(travel_package_prompt, model_name = model_name)    
-                    print(response_travel_package.text)   
-                    self.response_travel_package = response_travel_package.text       
-                    self.recommendations = recommendations         
-                    return {"prompt": travel_package_prompt, "response": response_travel_package, "recommendations": recommendations}
+                response_travel_package = self.model_specialist.prompt(travel_package_prompt, model_name = model_name)    
+                print(response_travel_package.text)   
+                self.response_travel_package = response_travel_package.text       
+                self.recommendations = recommendations         
+                return {"prompt": travel_package_prompt, "response": response_travel_package, "recommendations": recommendations}
             
             else:
                 assert self.response_travel_package is not None, "Please do initial query first"
@@ -568,14 +579,10 @@ class Traveller:
                 You are to provide a more refined travel package based on the followup_query from the client: 
                 {followup_query}
                 """
-                # check token size
-                token_count = self.count_tokens(followup_prompt)
-                # ask user for confirmation to send prompt to LLM
-                if True: #input(f"Send followup prompt (token count ~ {token_count}) to LLM? (y/n): ") == "y":
-                    response_travel_package = self.model_specialist.prompt(followup_prompt, model_name = model_name)
-                    print(response_travel_package.text)
-                    self.response_travel_package = response_travel_package.text   
-                    return {"prompt": followup_prompt, "response": response_travel_package}
+                response_travel_package = self.model_specialist.prompt(followup_prompt, model_name = model_name)
+                print(response_travel_package.text)
+                self.response_travel_package = response_travel_package.text   
+                return {"prompt": followup_prompt, "response": response_travel_package}
             
     def count_tokens(self, text, model="cl100k_base"):
         # encoding for Codex models (e.g., Gemini-Pro)
