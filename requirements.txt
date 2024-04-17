@@ -2,6 +2,7 @@ numpy
 pandas
 python-dotenv
 openpyxl
+
 google-generativeai 
 google-cloud-aiplatform
 anthropic
