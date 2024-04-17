@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "caramel-clock-418606",
+  "private_key_id": "7475ecc43656b776ea94b89705b41cfc7c6b0207",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDVSt/XUX20yRs9\nH74Z7CDmBcyBsIBET2KMLEG+ArqI4oKLszoZMEKMVZSv8eg6EYuZF6GedVDTzcZl\nH1ybhhd3uJOh/unC/qgEw4ja7woJlWcSS9Ph0dTtY2lc1NpVE4WiJKOBJJvU5tV5\nN6qMvkMPE6BmUA1PHW8ppJ+6I6gEyfGHJdk9PNceK7im4+EXLHlcizfNJBwtms+T\n3rMDHxH7vmjBvFnc3DDANibV7kntTPrj8rnmXZyWisFpI/HCWI9Lt95ssVAaCYIj\nWCFltymrU0+O8Ss+602fGs7M7+2DOXw8RrxYdqYcZIL60u9hWfXlrTQyLcZBi1QX\n8/wifs6bAgMBAAECggEAHih8lvLYTeAjoFRlKkAndK68OFgvArmgywYU85tqKaGx\naLRaUiZvOm19XRVcyx0g+nALc57N42zUkQbKrtjaZ5yrDzw+bEpaknXdW2tyJWHB\nFaawGl1zeG9WfgBAsMfWXNNGZSO6fvN2mrGixUy/qZmSU/UctKOKTL6QsR6KisaK\nurElRhrJ+OjvajKyV2FygUZjXX6KkppZmJOGtEtkkHfsWvpLy88s651IT/KCm83s\nyaPBrTzvL/jo9sHRj9WQ7rdZOjcAt6gQmtCrbJ4jsuPBZKM81iVQh0w2cOUeHxtR\nl5J58672rp+xUlb5EoWlfzr+KhblQxGYqtyapVUiDQKBgQD9WJQL/TW6bubH5nDs\n2GdUECJUCwlDnBjUChT93WnW38nUXnKjedL5D38yEy7sTqW3wA8DJvf3MQLNFzLf\nuzzZmW16vkennTHQNSmP9+JOqWAFLKI+BVi5RtkRf7KCFEyqmfM5I1klzCHzcq2f\nZGG5WVLu7QclFSNMDeDplO7ufwKBgQDXhuF6K63gbQ0nXY6pipGnO6vMBD67FkhH\ng0rW5dxTfkq5PoNVYz52CPm0GEUagawfOV4ou/tstbbIasiocwNuvnrY/rroxRdz\nFWrpTPfV6OT8cGhwutGJA8vWVAjOAwuvlmrXpKU0rxA9nmB6EDSV+nGv1jAU+HHt\nzyri3x8J5QKBgCa4AuhSKoPzrxGeBmQsLp6KWLS/ewr6MFE3uT2TOTm9ufra9GpH\nlBa8Z5QfmmxDGNCcaa7xpbQBqYvun7fRxdr7t9+qdQkI3TQU6+U03UFoYWRpDeKs\nroKicUpbWczHjXAFV0bEQDumlwm93QsfLFBHdoVNdGoWcO6OsHECcgHBAoGAcVKn\nXdB3pUhRoUAtEfIdMZxLcYNN5JsLuCZNhH7qATCnY41+CribD/8aJFqagxxpfyVv\n3+UvhvJowCp9hSysQl9/Qnd1mYyADu/U/gSNT3kcZatJDvT71ZocZH5c/s1VKKbj\nWK1mfDQMSwnqWmQI8k7z1eu97ljPtqW2PAHrVQ0CgYEArQsMcCXLEWo8SbLLq7SF\nmqFPqQsCW5ui7Odptz4W0d21E3UP0fLEaMvr0yfqZohS3mOcKnLufSaOjDHvNLWc\n3iY7XNLe7PTae72mMqHkf/ZWntFM3IxlIZNIUgmZPv3FG0AB2/llMdQWtMyVaZxD\nn7Do4NO8Muc93AUIOrinu10=\n-----END PRIVATE KEY-----\n",
+  "client_email": "swtt-database@caramel-clock-418606.iam.gserviceaccount.com",
+  "client_id": "103173418568385559861",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/swtt-database%40caramel-clock-418606.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

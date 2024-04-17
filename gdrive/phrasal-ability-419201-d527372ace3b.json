@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "phrasal-ability-419201",
+  "private_key_id": "d527372ace3b2e48fc500dd086a4f59268a87752",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCSyRZs374Y1/nj\nu1anCCS+QBTW1GA17GVhW0JrqOckaJxb5GX1k8bJ4vFQLtNkzB3hebDPlCDh+Jg6\ntOigRR0YYqCLIbOUi86xOXNtIxKVomQcHG5N22urng7UahR6uIUndcbTZM4UbHj9\naTLaGvg2QgZazSux/ZP/xtne12pkJ/KEhgolNzJTGwnDNoCTkC7vXR5h7D9M8zhT\nrKxKQ8Mw5Tj92HA4adxmMMKAvTuyUq/scRf71K/OGtHSGy3y5hhG0m8A18TQlddF\n6w9MUcOAlCm8A3SkDJlrkzQdHTe1xNj+3SM9VUM1+fG87jtQ3g7XJfft8mMlaNeP\nt7YzIbuXAgMBAAECggEACgwlstIl6wFto38BUXGnQjaUtpfW9hn2XpGmnEP1fnKC\nsW+S4xp4cv1L01dBNRcbvIFd7veOwKkJkosrmTzh3vdxUdS+vB5NyafLFN9fuEpj\nW+E+U6n/VsH89eFFAZl709WmBHZT/OXn6kC3MGLENsKSOMjugsJ+zPVJmI1aRPy0\ncf13tQz/7NAGK7s62itqXSZOjZm3mxi/80rkdmav/sbpterH3Bl8/AKCj7+svDe1\n62MvizE8DvF1RzKh65ReXEZRcmH2CaWry/8GxLTatPUXzJOoutEXLbGE+HYMYFfo\nMRtCbE4hbPI6cwDXkRyAWjoqNp1XytrN6NK+bcqx0QKBgQDNWBfk2PWyNAOkodeh\nnyTJvfD/Fug+F4e9F3dsKtxWS+6Ok+ZaxwK1bGhGR47V0qIGPdjmhU7I7oy3QIgR\n2CyRUeQahWKaFIB0KSLeKaCBrEQqgNXCh7/hS5aL4KUG0Vf4gOYNR+somx39RWoF\ng1+tK9YRpKItTpTM0Vs/wWh5PQKBgQC2/uVuiqVs1/1RDpKnaAVUf1Y5xvLQ4k+S\nvn/oR9sE8y2mXzBpvKdY4WM3gCiMr2LuNpPqyw0T8hJ8OpxKbiOslXoonYDI1MC7\neGI6SAkPDQxF5fPBfceGxlpShgbsY+VBrOe0Zl/Y6sWekZRFNpsscRMn3kgyodYq\nuNh0IYnNYwKBgFQ5mutZ9kUWwpvHaku3m/5Hs07eFXpKanmr42bxmZin4nyGu4hm\ncnz5rzeMaFDZ6W1H9uxup2cROZR8mpM/KOCeR0J9jXkHibybltqrFlO51efdGlCF\nH7YILALJrMbEHSIntLSj2Be6sC1PSHJkdVzxSwfHkGGnBq+P+66F5RU9AoGAfWcZ\n9PHAQWGWb6ir6VrIZEpK3ZcvqOOdojM31gb/2VmIS/3pYFxu1eLGqi8CGr7J7fKq\n1PjHAoceEdHcbskhW1CoARNGQNpDJXVu4v+gbZcEdRYLP+qhBAQDu4+rSO2AGsyR\nkDejsTPZrzuWPwQXvJHUjbqvATuUV3yKoLKnC38CgYEAiOelfcCKvsG02g4/0wam\n+KyasWx4dXGsovqhhut7sA1bAoJ7edzJ+uNyLZiGqjMG1FJnw0iWOa81nGSoq231\nv+vab2DOXnk8n/fBZJsjuE9w4mQsXLvXW2MpyN8TdnorfBnhVXYzHy4SpL3tg5iT\nC9ad9lBgQiNtb4rFfEYg5lI=\n-----END PRIVATE KEY-----\n",
+  "client_email": "sheets-developer-api-access@phrasal-ability-419201.iam.gserviceaccount.com",
+  "client_id": "112028745700005262720",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/sheets-developer-api-access%40phrasal-ability-419201.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
